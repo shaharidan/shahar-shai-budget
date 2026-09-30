@@ -1,0 +1,5 @@
+import type {YearPlan,Scope,Plan} from './budget';
+export type PersonalScope=Exclude<Scope,'shared'>;
+export function visibleYear(y:YearPlan,scope:PersonalScope):YearPlan{return {...y,months:Object.fromEntries(Object.entries(y.months).map(([key,p])=>[key,{...p,rows:p.rows.filter(r=>r.scope==='shared'||r.scope===scope),income:{shahar:scope==='shahar'?p.income.shahar:null,shai:scope==='shai'?p.income.shai:null}}]))}}
+export function mergeVisible(current:YearPlan,next:YearPlan,scope:PersonalScope):YearPlan{const months={...current.months};for(const [key,p]of Object.entries(next.months)){if(p.rows.some(r=>r.scope!=='shared'&&r.scope!==scope))throw new Error('Forbidden personal scope');const old=current.months[key];const hidden=old?.rows.filter(r=>r.scope!=='shared'&&r.scope!==scope)??[];if(hidden.some(r=>p.rows.some(n=>n.id===r.id)))throw new Error('Protected row id');months[key]={...p,rows:[...p.rows,...hidden],income:{shahar:scope==='shahar'?p.income.shahar:old?.income.shahar??null,shai:scope==='shai'?p.income.shai:old?.income.shai??null}} as Plan;}return {...current,months};}
+
